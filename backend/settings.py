@@ -73,3 +73,5 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Configuración CORS (Permitir todo para pruebas)
 CORS_ALLOW_ALL_ORIGINS = True
 
+
+
