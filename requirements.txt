@@ -5,4 +5,5 @@ gunicorn
 whitenoise
 Pillow
 numpy
-tensorflow-cpu==2.15.0
+#tensorflow
+tensorflow-cpu
