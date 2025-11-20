@@ -1,0 +1,8 @@
+Django>=4.2
+djangorestframework
+django-cors-headers
+gunicorn
+whitenoise
+Pillow
+numpy
+tensorflow-cpu==2.15.0

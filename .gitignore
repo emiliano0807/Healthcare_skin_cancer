@@ -1,0 +1,25 @@
+# --- Django ---
+*.log
+*.pot
+*.pyc
+__pycache__/
+db.sqlite3
+media/
+staticfiles/
+
+# --- Entornos Virtuales ---
+venv/
+env/
+ENV/
+.env
+
+# --- IDEs ---
+.vscode/
+.idea/
+
+# --- Sistema Operativo ---
+.DS_Store
+Thumbs.db
+
+# Nota: NO agregamos la carpeta ml_models porque SÍ queremos subir los modelos .h5
+# (Siempre que pesen menos de 100MB)

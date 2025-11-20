@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DermoScan AI Completo</title>
+    <style>
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background: #f4f6f8;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .main-card {
+        background: white;
+        width: 90%;
+        max-width: 800px;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      h1 {
+        color: #2d3436;
+        margin-bottom: 10px;
+      }
+      .subtitle {
+        color: #636e72;
+        margin-bottom: 30px;
+      }
+
+      .buttons-container {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 30px;
+      }
+
+      .btn-upload {
+        background: #0984e3;
+        color: white;
+        padding: 15px 40px;
+        border-radius: 50px;
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: bold;
+        transition: 0.3s;
+        box-shadow: 0 5px 15px rgba(9, 132, 227, 0.3);
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .btn-upload:hover {
+        background: #74b9ff;
+        transform: translateY(-2px);
+      }
+
+      .btn-reset {
+        background: #636e72;
+        color: white;
+        padding: 15px 30px;
+        border-radius: 50px;
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: bold;
+        transition: 0.3s;
+        border: none;
+        display: none; /* Oculto al inicio */
+        align-items: center;
+        gap: 10px;
+      }
+      .btn-reset:hover {
+        background: #b2bec3;
+        transform: translateY(-2px);
+      }
+
+      input[type="file"] {
+        display: none;
+      }
+
+      /* Área de Resultados */
+      .results-grid {
+        display: none;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        width: 100%;
+        margin-top: 20px;
+      }
+
+      /* Visualizador de Imagen */
+      .image-viewer {
+        position: relative;
+        width: 100%;
+        height: 300px;
+        border-radius: 15px;
+        overflow: hidden;
+        border: 2px solid #dfe6e9;
+        background: #000;
+      }
+      .image-viewer img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+      .mask-overlay {
+        z-index: 2;
+        opacity: 0;
+        transition: opacity 0.5s;
+      }
+
+      /* Panel de Diagnóstico */
+      .diagnosis-panel {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .status-card {
+        padding: 20px;
+        border-radius: 15px;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .danger {
+        background: #ff7675;
+        color: #2d3436;
+        border: 3px solid #d63031;
+      }
+      .safe {
+        background: #55efc4;
+        color: #2d3436;
+        border: 3px solid #00b894;
+      }
+
+      .diagnosis-title {
+        font-size: 24px;
+        font-weight: 800;
+        margin: 0;
+        text-transform: uppercase;
+      }
+      .confidence {
+        font-size: 18px;
+        margin-top: 10px;
+      }
+
+      .toggle-btn {
+        background: white;
+        border: 2px solid #ccc;
+        padding: 10px;
+        cursor: pointer;
+        border-radius: 8px;
+        font-weight: bold;
+        color: #555;
+        margin-top: 10px;
+        width: 100%;
+      }
+
+      #loading {
+        display: none;
+        margin-top: 20px;
+        font-weight: bold;
+        color: #0984e3;
+      }
+
+      @media (max-width: 700px) {
+        .results-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main-card">
+      <h1>🧬 DermoScan AI</h1>
+      <p class="subtitle">
+        Segmentación y Diagnóstico de Cáncer de Piel en tiempo real
+      </p>
+
+      <div class="buttons-container">
+        <label class="btn-upload" id="lblUpload">
+          📷 Subir Imagen
+          <input type="file" id="fileInput" accept="image/*" />
+        </label>
+
+        <button class="btn-reset" id="btnReset" onclick="resetApp()">
+          🔄 Reiniciar
+        </button>
+      </div>
+
+      <div id="loading">Analizando píxeles y diagnosticando... ⏳</div>
+
+      <div class="results-grid" id="resultsArea">
+        <div>
+          <div class="image-viewer">
+            <img id="imgBase" src="" />
+            <img id="imgMask" class="mask-overlay" src="" />
+          </div>
+          <button class="toggle-btn" onclick="toggleMask()">
+            👁️ Ocultar/Mostrar Análisis
+          </button>
+        </div>
+
+        <div class="diagnosis-panel">
+          <div id="statusBox" class="status-card">
+            <p class="diagnosis-title" id="diagText">--</p>
+            <p class="confidence">Confianza: <span id="confText">--</span></p>
+          </div>
+
+          <div
+            style="
+              background: #f1f2f6;
+              padding: 15px;
+              border-radius: 10px;
+              font-size: 14px;
+              color: #636e72;
+            "
+          >
+            <strong>Explicación:</strong><br />
+            La zona roja indica el área que la IA identificó como lesión
+            (Segmentación).<br />
+            El texto arriba indica la probabilidad de malignidad
+            (Clasificación).
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const fileInput = document.getElementById("fileInput");
+      const resultsArea = document.getElementById("resultsArea");
+      const loading = document.getElementById("loading");
+
+      const imgBase = document.getElementById("imgBase");
+      const imgMask = document.getElementById("imgMask");
+      const diagText = document.getElementById("diagText");
+      const confText = document.getElementById("confText");
+      const statusBox = document.getElementById("statusBox");
+
+      const btnReset = document.getElementById("btnReset");
+      const lblUpload = document.getElementById("lblUpload");
+
+      fileInput.addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // 1. Mostrar Preview
+        imgBase.src = URL.createObjectURL(file);
+        resultsArea.style.display = "none";
+        loading.style.display = "block";
+
+        // Ocultar botón subir mientras carga, mostrar reset opcional o esperar
+        lblUpload.style.display = "none";
+
+        const formData = new FormData();
+        formData.append("image", file);
+
+        try {
+          // 2. Petición al Backend
+          const response = await fetch("/api/predict/", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await response.json();
+
+          loading.style.display = "none";
+
+          if (data.status === "success") {
+            resultsArea.style.display = "grid";
+            btnReset.style.display = "flex"; // Mostrar botón reset
+
+            // A. Poner Máscara
+            imgMask.src = "data:image/png;base64," + data.mask_base64;
+            imgMask.style.opacity = "1";
+
+            // B. Poner Datos
+            diagText.innerText = data.diagnosis;
+            confText.innerText = data.confidence;
+
+            // C. Estilos
+            statusBox.className =
+              "status-card " + (data.is_danger ? "danger" : "safe");
+          } else {
+            alert("Error: " + data.error);
+            resetApp(); // Si falla, reseteamos
+          }
+        } catch (error) {
+          loading.style.display = "none";
+          alert("Error de conexión");
+          resetApp();
+        }
+      });
+
+      function toggleMask() {
+        imgMask.style.opacity = imgMask.style.opacity === "0" ? "1" : "0";
+      }
+
+      // FUNCIÓN RESET NUEVA
+      function resetApp() {
+        // 1. Limpiar input
+        fileInput.value = "";
+
+        // 2. Ocultar resultados y botón reset
+        resultsArea.style.display = "none";
+        btnReset.style.display = "none";
+
+        // 3. Mostrar botón de subir de nuevo
+        lblUpload.style.display = "flex";
+
+        // 4. Limpiar imágenes y textos (opcional, por limpieza)
+        imgBase.src = "";
+        imgMask.src = "";
+        diagText.innerText = "--";
+      }
+    </script>
+  </body>
+</html>
